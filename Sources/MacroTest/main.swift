@@ -4,17 +4,26 @@ public macro Test() = #externalMacro(
     type: "TestMacro"
 )
 
+public enum Visibility { case `private`, `internal`, `public` }
 
-@Test
-var foo = "foo"
+@attached(member, names: named(init))
+public macro initializer(_ visibility: Visibility = .internal) = #externalMacro(
+    module: "MacroTestImpl",
+    type: "InitializerMacro"
+)
 
-// Uncommenting this line cases the compiler to crash
-//@Test
-var bar = "bar" {
-    didSet {
-        print("bar was set to \(bar)")
-    }
+@attached(peer, names: overloaded)
+public macro Reasync() = #externalMacro(
+    module: "MacroTestImpl",
+    type: "ReasyncMacro"
+)
+
+@Reasync
+func f(body: () async throws -> Void) async rethrows {
+    try await body()
 }
 
-foo = "baz"
-bar = "baz"
+@Reasync
+func g(body: () async -> Void) async {
+    await f(body: body)
+}
